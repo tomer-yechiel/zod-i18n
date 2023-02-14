@@ -20,6 +20,7 @@ export type ZodI18nMapOption = {
   t?: i18n["t"];
   ns?: string | readonly string[];
   handlePath?: HandlePathOption;
+  customErrorNs?: string;
 };
 
 export type HandlePathOption = {
@@ -31,7 +32,7 @@ export type HandlePathOption = {
 const defaultNs = "zod";
 
 export const makeZodI18nMap: MakeZodI18nMap = (option) => (issue, ctx) => {
-  const { t, ns, handlePath } = {
+  const { t, ns, customErrorNs, handlePath } = {
     t: i18next.t,
     ns: defaultNs,
     ...option,
@@ -213,11 +214,19 @@ export const makeZodI18nMap: MakeZodI18nMap = (option) => (issue, ctx) => {
       );
       break;
     case ZodIssueCode.custom:
-      message = t("errors.custom", {
-        ns,
-        defaultValue: message,
-        ...path,
-      });
+      if (issue.params?.i18nKey !== undefined) {
+        message = t(issue.params?.i18nKey, {
+          ns: customErrorNs,
+          defaultValue: message,
+          ...path,
+        });
+      } else {
+        message = t("errors.custom", {
+          ns,
+          defaultValue: message,
+          ...path,
+        });
+      }
       break;
     case ZodIssueCode.invalid_intersection_types:
       message = t("errors.invalid_intersection_types", {
